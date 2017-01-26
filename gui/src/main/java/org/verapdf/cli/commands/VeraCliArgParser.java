@@ -26,10 +26,18 @@ import org.verapdf.metadata.fixer.FixerFactory;
 import org.verapdf.pdfa.flavours.PDFAFlavour;
 import org.verapdf.pdfa.validation.validators.ValidatorFactory;
 import org.verapdf.processor.FormatOption;
+import org.verapdf.processor.ProcessorConfig;
+import org.verapdf.processor.ProcessorFactory;
+import org.verapdf.processor.plugins.PluginsCollectionConfig;
 
-import joptsimple.OptionParser;
-import joptsimple.OptionSet;
-import joptsimple.OptionSpec;
+import javax.xml.bind.JAXBException;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.NoSuchElementException;
 
 /**
  * This class holds all command-line options used by VeraPDF application.
@@ -376,7 +384,7 @@ public class VeraCliArgParser implements VeraCliArgs {
 	public void showHelp(OutputStream dest) throws IOException {
 		this.parser.printHelpOn(dest);
 	}
-	
+
 	public static final class FlavourConvertor {
 		public final PDFAFlavour flavour;
 		private FlavourConvertor(PDFAFlavour flavour) {
@@ -390,13 +398,13 @@ public class VeraCliArgParser implements VeraCliArgs {
 			throw new IllegalArgumentException("Illegal --flavour argument:" + value);
 		}
 	}
-	
+
 	public static final class FormatConvertor {
 		public final FormatOption format;
 		private FormatConvertor(FormatOption format) {
 			this.format = format;
 		}
-		
+
 		public static FormatConvertor valueOf(final String value) {
 			try {
 				return new FormatConvertor(FormatOption.fromOption(value));
@@ -406,5 +414,4 @@ public class VeraCliArgParser implements VeraCliArgs {
 		}
 
 	}
-
 }
