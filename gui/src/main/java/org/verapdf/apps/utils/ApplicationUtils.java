@@ -14,7 +14,6 @@ import org.verapdf.core.utils.FileUtils;
 import org.verapdf.features.FeatureExtractorConfig;
 import org.verapdf.features.FeatureFactory;
 import org.verapdf.features.FeatureObjectType;
-import org.verapdf.gui.utils.GUIConstants;
 import org.verapdf.policy.SchematronGenerator;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
@@ -36,6 +35,7 @@ import javax.xml.xpath.XPathFactory;
 public final class ApplicationUtils {
 
 	private static final Logger LOGGER = Logger.getLogger(ApplicationUtils.class.getCanonicalName());
+	public static final String PDF = "pdf"; //$NON-NLS-1$
 
 	/**
 	 * Private constructor should never be called
@@ -63,7 +63,7 @@ public final class ApplicationUtils {
 				continue;
 			}
 			if (file.isFile()) {
-				if (FileUtils.hasExtNoCase(file.getName(), GUIConstants.PDF)) {
+				if (FileUtils.hasExtNoCase(file.getName(), PDF)) {
 					retVal.add(file);
 				} else {
 					LOGGER.log(Level.SEVERE, "File " + file.getAbsolutePath() + " doesn't have a .pdf extension.");
@@ -80,7 +80,7 @@ public final class ApplicationUtils {
 		Applications.checkArgNotNull(toFilter, "toFilter"); //$NON-NLS-1$
 		List<File> retVal = new ArrayList<>();
 		for (File file : toFilter) {
-			if (file.isFile() && FileUtils.hasExtNoCase(file.getName(), GUIConstants.PDF)) {
+			if (file.isFile() && FileUtils.hasExtNoCase(file.getName(), PDF)) {
 				retVal.add(file);
 			} else if (file.isDirectory() && isRecursive) {
 				retVal.addAll(filterPdfFilesFromDirs(Arrays.asList(file.listFiles()), isRecursive));
