@@ -28,12 +28,12 @@
   <parent>
     <artifactId>verapdf-parent</artifactId>
     <groupId>org.verapdf</groupId>
-    <version>1.0.17</version>
+    <version>1.4.1</version>
   </parent>
 
   <groupId>org.verapdf</groupId>
   <artifactId>verapdf-apps</artifactId>
-  <version>1.1.0-SNAPSHOT</version>
+  <version>1.9.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>veraPDF PDF/A Validation Applications</name>
@@ -43,6 +43,8 @@
 
   <modules>
     <module>gui</module>
+    <module>greenfield-apps</module>
+    <module>pdfbox-apps</module>
     <module>installer</module>
   </modules>
 
@@ -71,7 +73,9 @@
     <sonar.jacoco.itReportPath>${project.basedir}/../target/jacoco-it.exec</sonar.jacoco.itReportPath>
     <sonar.language>java</sonar.language>
     <maven.failsafe.version>2.18.1</maven.failsafe.version>
-    <verapdf.validation.version>[1.1.0,1.2.0)</verapdf.validation.version>
+    <verapdf.library.version>[1.9.0,1.10.0)</verapdf.library.version>
+    <verapdf.pdfbox.validation.version>[1.9.0,1.10.0)</verapdf.pdfbox.validation.version>
+    <verapdf.validation.version>[1.9.0,1.10.0)</verapdf.validation.version>
   </properties>
 
   <dependencyManagement>
@@ -160,42 +164,6 @@
   </reporting>
 
   <profiles>
-    <profile>
-      <id>coverage-per-test</id>
-      <build>
-        <plugins>
-
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-surefire-plugin</artifactId>
-            <configuration>
-
-              <properties>
-                <property>
-                  <name>listener</name>
-                  <value>org.sonar.java.jacoco.JUnitListener</value>
-                </property>
-              </properties>
-
-              <excludes>
-                <exclude>**/*IT.java</exclude>
-              </excludes>
-
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-      <dependencies>
-
-        <dependency>
-          <groupId>org.codehaus.sonar-plugins.java</groupId>
-          <artifactId>sonar-jacoco-listeners</artifactId>
-          <version>1.2</version>
-          <scope>test</scope>
-        </dependency>
-
-      </dependencies>
-    </profile>
 
     <profile>
       <id>source-package</id>

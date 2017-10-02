@@ -95,7 +95,7 @@ public interface VeraCliArgs {
 	/**
 	 * @return the list of file paths
 	 */
-	List<File> getPdfPaths();
+	List<String> getPdfPaths();
 
 	boolean isValidationOff();
 	

@@ -75,5 +75,5 @@ if $cygwin; then
   [ -n "$BASEDIR" ] && BASEDIR=`cygpath --path --windows "$BASEDIR"`
 fi
 
-cd $BASEDIR
-java -jar verapdf-izpack-installer-${project.version}.jar
+cd "$BASEDIR"
+java -jar ${installer.output.filename}

@@ -15,29 +15,40 @@
 package org.verapdf.cli.commands;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import javax.xml.bind.JAXBException;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPathExpressionException;
+
 import org.verapdf.apps.Applications;
+import org.verapdf.apps.ProcessType;
+import org.verapdf.apps.VeraAppConfig;
+import org.verapdf.apps.utils.ApplicationUtils;
+import org.verapdf.core.VeraPDFException;
+import org.verapdf.features.FeatureExtractorConfig;
 import org.verapdf.metadata.fixer.FixerFactory;
+import org.verapdf.metadata.fixer.MetadataFixerConfig;
 import org.verapdf.pdfa.flavours.PDFAFlavour;
+import org.verapdf.pdfa.validation.profiles.Profiles;
+import org.verapdf.pdfa.validation.profiles.ValidationProfile;
+import org.verapdf.pdfa.validation.validators.ValidatorConfig;
 import org.verapdf.pdfa.validation.validators.ValidatorFactory;
 import org.verapdf.processor.FormatOption;
 import org.verapdf.processor.ProcessorConfig;
 import org.verapdf.processor.ProcessorFactory;
 import org.verapdf.processor.plugins.PluginsCollectionConfig;
+import org.xml.sax.SAXException;
 
-import javax.xml.bind.JAXBException;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.NoSuchElementException;
+import joptsimple.OptionParser;
+import joptsimple.OptionSet;
+import joptsimple.OptionSpec;
 
 /**
  * This class holds all command-line options used by VeraPDF application.
@@ -143,36 +154,35 @@ public class VeraCliArgParser implements VeraCliArgs {
 	// report file.")
 	// private boolean isOverwriteReportFile = false;
 	private final boolean isValidationOff;
-	private final List<File> pdfPaths;
+	private final List<String> pdfPaths;
 
 	public VeraCliArgParser(final String[] args) {
 		this.parser = new OptionParser();
-		parser.acceptsAll(Arrays.asList(HELP_FLAG, HELP), HELP_MESSAGE).forHelp();
-		parser.accepts(VERSION, VERSION_MESSAGE);
-		OptionSpec<FlavourConvertor> flav = parser.acceptsAll(Arrays.asList(FLAVOUR_FLAG, FLAVOUR), FLAVOUR_MESSAGE)
+		this.parser.acceptsAll(Arrays.asList(HELP_FLAG, HELP), HELP_MESSAGE).forHelp();
+		this.parser.accepts(VERSION, VERSION_MESSAGE);
+		OptionSpec<FlavourConvertor> flav = this.parser.acceptsAll(Arrays.asList(FLAVOUR_FLAG, FLAVOUR), FLAVOUR_MESSAGE)
 				.withRequiredArg().ofType(FlavourConvertor.class);
-		parser.acceptsAll(Arrays.asList(SUCCESS, PASSED), SUCCESS_MESSAGE);
-		parser.acceptsAll(Arrays.asList(LIST_FLAG, LIST), LIST_MESSAGE);
-		OptionSpec<File> prof = parser.acceptsAll(Arrays.asList(LOAD_PROFILE_FLAG, LOAD_PROFILE), LOAD_PROFILE_MESSAGE)
+		this.parser.acceptsAll(Arrays.asList(SUCCESS, PASSED), SUCCESS_MESSAGE);
+		this.parser.acceptsAll(Arrays.asList(LIST_FLAG, LIST), LIST_MESSAGE);
+		OptionSpec<File> prof = this.parser.acceptsAll(Arrays.asList(LOAD_PROFILE_FLAG, LOAD_PROFILE), LOAD_PROFILE_MESSAGE)
 				.withRequiredArg().ofType(File.class);
-		parser.acceptsAll(Arrays.asList(EXTRACT_FLAG, EXTRACT), EXTRACT_MESSAGE);
-		OptionSpec<FormatConvertor> form = parser.accepts(FORMAT, FORMAT_DESCRIPTION).withRequiredArg()
+		this.parser.acceptsAll(Arrays.asList(EXTRACT_FLAG, EXTRACT), EXTRACT_MESSAGE);
+		OptionSpec<FormatConvertor> form = this.parser.accepts(FORMAT, FORMAT_DESCRIPTION).withRequiredArg()
 				.ofType(FormatConvertor.class);
-		parser.acceptsAll(Arrays.asList(RECURSE_FLAG, RECURSE), RECURSE_DESCRIPTION);
-		parser.acceptsAll(Arrays.asList(VERBOSE_FLAG, VERBOSE), VERBOSE_DESCRIPTION);
-		OptionSpec<Integer> maxFailsDisp = parser.accepts(MAX_FAILURES_DISPLAYED, MAX_FAILURES_DISPLAYED_DESCRIPTION)
+		this.parser.acceptsAll(Arrays.asList(RECURSE_FLAG, RECURSE), RECURSE_DESCRIPTION);
+		this.parser.acceptsAll(Arrays.asList(VERBOSE_FLAG, VERBOSE), VERBOSE_DESCRIPTION);
+		OptionSpec<Integer> maxFailsDisp = this.parser.accepts(MAX_FAILURES_DISPLAYED, MAX_FAILURES_DISPLAYED_DESCRIPTION)
 				.withRequiredArg().ofType(Integer.class);
-		OptionSpec<Integer> maxFails = parser.accepts(MAX_FAILURES, MAX_FAILURES_DESCRIPTION).withRequiredArg()
+		OptionSpec<Integer> maxFails = this.parser.accepts(MAX_FAILURES, MAX_FAILURES_DESCRIPTION).withRequiredArg()
 				.ofType(Integer.class);
-		parser.accepts(FIX_METADATA, FIX_METADATA_DESCRIPTION);
-		parser.accepts(FIX_METADATA_PREFIX, FIX_METADATA_PREFIX_DESCRIPTION).withRequiredArg();
-		parser.accepts(FIX_METADATA_FOLDER, FIX_METADATA_FOLDER_DESCRIPTION).withRequiredArg();
-		OptionSpec<File> pol = parser.accepts(POLICY_FILE, POLICY_FILE_DESCRIPTION).withRequiredArg()
+		this.parser.accepts(FIX_METADATA, FIX_METADATA_DESCRIPTION);
+		this.parser.accepts(FIX_METADATA_PREFIX, FIX_METADATA_PREFIX_DESCRIPTION).withRequiredArg();
+		this.parser.accepts(FIX_METADATA_FOLDER, FIX_METADATA_FOLDER_DESCRIPTION).withRequiredArg();
+		OptionSpec<File> pol = this.parser.accepts(POLICY_FILE, POLICY_FILE_DESCRIPTION).withRequiredArg()
 				.ofType(File.class);
-		parser.acceptsAll(Arrays.asList(VALID_OFF_FLAG, VALID_OFF), VALID_OFF_DESCRIPTION);
-		OptionSpec<File> files = parser.nonOptions().ofType(File.class);
+		this.parser.acceptsAll(Arrays.asList(VALID_OFF_FLAG, VALID_OFF), VALID_OFF_DESCRIPTION);
 
-		OptionSet opts = parser.parse(args);
+		OptionSet opts = this.parser.parse(args);
 		this.help = opts.has(HELP_FLAG) || opts.has(HELP);
 		this.showVersion = opts.has(VERSION);
 		this.flavour = (opts.has(FLAVOUR_FLAG) || opts.has(FLAVOUR)) ? flav.value(opts).flavour : PDFAFlavour.NO_FLAVOUR;
@@ -190,9 +200,9 @@ public class VeraCliArgParser implements VeraCliArgs {
 		this.prefix = opts.has(FIX_METADATA_PREFIX) ? (String) opts.valueOf(FIX_METADATA_PREFIX)
 				: FixerFactory.defaultConfig().getFixesPrefix();
 		this.saveFolder = opts.has(FIX_METADATA_FOLDER) ? (String) opts.valueOf(FIX_METADATA_FOLDER) : ""; //$NON-NLS-1$
-		policyFile = opts.has(POLICY_FILE) ? pol.value(opts) : null;
-		isValidationOff = opts.has(VALID_OFF_FLAG) || opts.has(VALID_OFF);
-		pdfPaths = files.values(opts);
+		this.policyFile = opts.has(POLICY_FILE) ? pol.value(opts) : null;
+		this.isValidationOff = opts.has(VALID_OFF_FLAG) || opts.has(VALID_OFF);
+		this.pdfPaths = (List<String>) opts.nonOptionArguments();
 
 	}
 
@@ -340,7 +350,7 @@ public class VeraCliArgParser implements VeraCliArgs {
 	 * @return the list of file paths
 	 */
 	@Override
-	public List<File> getPdfPaths() {
+	public List<String> getPdfPaths() {
 		return this.pdfPaths;
 	}
 
@@ -404,7 +414,7 @@ public class VeraCliArgParser implements VeraCliArgs {
 		private FormatConvertor(FormatOption format) {
 			this.format = format;
 		}
-
+		
 		public static FormatConvertor valueOf(final String value) {
 			try {
 				return new FormatConvertor(FormatOption.fromOption(value));
@@ -412,6 +422,57 @@ public class VeraCliArgParser implements VeraCliArgs {
 				throw new IllegalArgumentException("Illegal format option value: " + value, e);
 			}
 		}
+	}
 
+	public ValidatorConfig validatorConfig() {
+		return ValidatorFactory.createConfig(this.flavour, this.logPassed(), this.maxFailures);
+	}
+
+	public MetadataFixerConfig fixerConfig() {
+		return FixerFactory.configFromValues(this.prefix, true);
+	}
+
+	public VeraAppConfig appConfig(final VeraAppConfig base) {
+		Applications.Builder configBuilder = Applications.Builder.fromConfig(base);
+		configBuilder.format(this.getFormat()).isVerbose(this.isVerbose()).fixerFolder(this.saveFolder);
+		configBuilder.type(typeFromArgs(this));
+		configBuilder.maxFails(this.maxFailuresDisplayed);
+		return configBuilder.build();
+	}
+
+	public ProcessorConfig processorConfig(final ProcessType procType, FeatureExtractorConfig featConfig,
+										   PluginsCollectionConfig plugConfig)
+			throws VeraPDFException {
+		FeatureExtractorConfig featuresConfig = featConfig;
+		if (isPolicy()) {
+			try (InputStream policyStream = new FileInputStream(this.policyFile)) {
+				featuresConfig = ApplicationUtils.mergeEnabledFeaturesFromPolicy(featuresConfig, policyStream);
+			} catch (SAXException | XPathExpressionException | IOException | ParserConfigurationException e) {
+				throw new VeraPDFException("Problem during obtaining feature types from policy file", e);
+			}
+		}
+		if (this.profileFile == null) {
+			return ProcessorFactory.fromValues(this.validatorConfig(), featuresConfig, plugConfig, this.fixerConfig(),
+					procType.getTasks(), this.saveFolder);
+		}
+		try (InputStream fis = new FileInputStream(this.profileFile)) {
+			ValidationProfile customProfile = Profiles.profileFromXml(fis);
+			return ProcessorFactory.fromValues(this.validatorConfig(), featuresConfig, plugConfig, this.fixerConfig(),
+					procType.getTasks(), customProfile, this.saveFolder);
+		} catch (IOException | JAXBException excep) {
+			throw new VeraPDFException("Problem loading custom profile", excep);
+		}
+
+		
+	}
+
+	private static ProcessType typeFromArgs(VeraCliArgParser parser) {
+		ProcessType retVal = (parser.isValidationOff() && !parser.isPolicy()) ? ProcessType.NO_PROCESS
+				: ProcessType.VALIDATE;
+		if (parser.extractFeatures() || parser.isPolicy())
+			retVal = ProcessType.addProcess(retVal, ProcessType.EXTRACT);
+		if (parser.fixMetadata())
+			retVal = ProcessType.addProcess(retVal, ProcessType.FIX);
+		return retVal;
 	}
 }

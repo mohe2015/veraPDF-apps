@@ -1,34 +1,34 @@
 /**
  * This file is part of VeraPDF Library GUI, a module of the veraPDF project.
- * Copyright (c) 2015, veraPDF Consortium <info@verapdf.org>
- * All rights reserved.
- *
- * VeraPDF Library GUI is free software: you can redistribute it and/or modify
- * it under the terms of either:
- *
- * The GNU General public license GPLv3+.
- * You should have received a copy of the GNU General Public License
- * along with VeraPDF Library GUI as the LICENSE.GPL file in the root of the source
- * tree.  If not, see http://www.gnu.org/licenses/ or
- * https://www.gnu.org/licenses/gpl-3.0.en.html.
- *
- * The Mozilla Public License MPLv2+.
- * You should have received a copy of the Mozilla Public License along with
- * VeraPDF Library GUI as the LICENSE.MPL file in the root of the source tree.
- * If a copy of the MPL was not distributed with this file, you can obtain one at
- * http://mozilla.org/MPL/2.0/.
+ * Copyright (c) 2015, veraPDF Consortium <info@verapdf.org> All rights
+ * reserved. VeraPDF Library GUI is free software: you can redistribute it
+ * and/or modify it under the terms of either: The GNU General public license
+ * GPLv3+. You should have received a copy of the GNU General Public License
+ * along with VeraPDF Library GUI as the LICENSE.GPL file in the root of the
+ * source tree. If not, see http://www.gnu.org/licenses/ or
+ * https://www.gnu.org/licenses/gpl-3.0.en.html. The Mozilla Public License
+ * MPLv2+. You should have received a copy of the Mozilla Public License along
+ * with VeraPDF Library GUI as the LICENSE.MPL file in the root of the source
+ * tree. If a copy of the MPL was not distributed with this file, you can obtain
+ * one at http://mozilla.org/MPL/2.0/.
  */
 package org.verapdf.gui;
 
 import org.verapdf.apps.ConfigManager;
 import org.verapdf.apps.ProcessType;
 import org.verapdf.apps.VeraAppConfig;
+import org.verapdf.apps.utils.ApplicationUtils;
 import org.verapdf.core.VeraPDFException;
-import org.verapdf.gui.tools.GUIConstants;
+import org.verapdf.features.FeatureExtractorConfig;
+import org.verapdf.gui.utils.GUIConstants;
 import org.verapdf.pdfa.validation.profiles.ValidationProfile;
 import org.verapdf.pdfa.validation.validators.ValidatorConfig;
 import org.verapdf.policy.PolicyChecker;
-import org.verapdf.processor.*;
+import org.verapdf.processor.BatchProcessor;
+import org.verapdf.processor.FormatOption;
+import org.verapdf.processor.ProcessorConfig;
+import org.verapdf.processor.ProcessorFactory;
+import org.verapdf.processor.TaskType;
 import org.verapdf.processor.reports.BatchSummary;
 import org.verapdf.report.HTMLReport;
 
@@ -49,10 +49,10 @@ class ValidateWorker extends SwingWorker<BatchSummary, Integer> {
 
     private static final Logger logger = Logger.getLogger(ValidateWorker.class.getCanonicalName());
 
-    private static final String ERROR_IN_OPEN_STREAMS = "Can't open stream from PDF file or can't open stream to temporary XML report file";
-    private static final String ERROR_IN_PROCESSING = "Error during the processing";
-    private static final String ERROR_IN_CREATING_TEMP_FILE = "Can't create temporary file for XML report";
-    private static final String ERROR_IN_SAVING_REPORT = "Can't serialize xml report";
+	private static final String ERROR_IN_OPEN_STREAMS = "Can't open stream from PDF file or can't open stream to temporary XML report file"; //$NON-NLS-1$
+	private static final String ERROR_IN_PROCESSING = "Error during the processing"; //$NON-NLS-1$
+	private static final String ERROR_IN_CREATING_TEMP_FILE = "Can't create temporary file for XML report"; //$NON-NLS-1$
+	private static final String ERROR_IN_OBTAINING_POLICY_FEATURES = "Can't obtain enabled features from policy files"; //$NON-NLS-1$
 
     private List<File> pdfs;
     private ValidationProfile customProfile;
@@ -82,7 +82,7 @@ class ValidateWorker extends SwingWorker<BatchSummary, Integer> {
             this.htmlReport = null;
         } catch (IOException e) {
             logger.log(Level.SEVERE, ERROR_IN_CREATING_TEMP_FILE, e);
-            this.parent.errorInValidatingOccur(ERROR_IN_CREATING_TEMP_FILE + ": ", e); //$NON-NLS-1$
+            this.parent.handleValidationError(ERROR_IN_CREATING_TEMP_FILE + ": ", e); //$NON-NLS-1$
         }
         try (OutputStream mrrReport = new FileOutputStream(this.xmlReport)) {
             VeraAppConfig veraAppConfig = parent.appConfigFromState();
@@ -106,10 +106,10 @@ class ValidateWorker extends SwingWorker<BatchSummary, Integer> {
             }
         } catch (IOException e) {
         	logger.log(Level.SEVERE, ERROR_IN_OPEN_STREAMS, e);
-            this.parent.errorInValidatingOccur(ERROR_IN_OPEN_STREAMS + ": ", e); //$NON-NLS-1$
+            this.parent.handleValidationError(ERROR_IN_OPEN_STREAMS + ": ", e); //$NON-NLS-1$
         } catch (VeraPDFException e) {
         	logger.log(Level.SEVERE, ERROR_IN_PROCESSING, e);
-            this.parent.errorInValidatingOccur(ERROR_IN_PROCESSING + ": ", e); //$NON-NLS-1$
+            this.parent.handleValidationError(ERROR_IN_PROCESSING + ": ", e); //$NON-NLS-1$
         }
 
         if (this.batchSummary != null) {
@@ -148,13 +148,13 @@ class ValidateWorker extends SwingWorker<BatchSummary, Integer> {
                         this.configManager.getApplicationConfig().getWikiPath(), true);
 
             } catch (IOException | TransformerException e) {
-                JOptionPane.showMessageDialog(this.parent, GUIConstants.ERROR_IN_SAVING_HTML_REPORT + e.getMessage(),
+                JOptionPane.showMessageDialog(this.parent, GUIConstants.IOEXCEP_SAVING_REPORT + e.getMessage(),
                         GUIConstants.ERROR, JOptionPane.ERROR_MESSAGE);
                 logger.log(Level.SEVERE, "Exception saving the HTML report", e);
                 this.htmlReport = null;
             }
         } catch (IOException e) {
-            JOptionPane.showMessageDialog(this.parent, GUIConstants.ERROR_IN_SAVING_HTML_REPORT + e.getMessage(),
+            JOptionPane.showMessageDialog(this.parent, GUIConstants.IOEXCEP_SAVING_REPORT + e.getMessage(),
                     GUIConstants.ERROR, JOptionPane.ERROR_MESSAGE);
             logger.log(Level.SEVERE, "Exception saving the HTML report", e);
             this.htmlReport = null;

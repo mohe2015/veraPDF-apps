@@ -98,11 +98,11 @@ then
   REPO="$BASEDIR"/bin
 fi
 
-CLASSPATH="$BASEDIR"/etc:"$REPO"/*
+CLASSPATH="$BASEDIR"/etc:"$REPO"/'*'
 
 ENDORSED_DIR=
 if [ -n "$ENDORSED_DIR" ] ; then
-  CLASSPATH=$BASEDIR/$ENDORSED_DIR/*:$CLASSPATH
+  CLASSPATH=$BASEDIR/$ENDORSED_DIR/'*':$CLASSPATH
 fi
 
 if [ -n "$CLASSPATH_PREFIX" ] ; then
@@ -126,5 +126,5 @@ exec "$JAVACMD" $JAVA_OPTS  \
   -Dapp.repo="$REPO" \
   -Dapp.home="$BASEDIR" \
   -Dbasedir="$BASEDIR" \
-  org.verapdf.cli.VeraPdfCli \
+  @verapdf.wrapper.cli@ \
   "$@"

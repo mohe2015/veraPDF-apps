@@ -23,7 +23,7 @@ package org.verapdf.processor;
 import org.junit.Test;
 import org.verapdf.features.FeatureFactory;
 import org.verapdf.metadata.fixer.FixerFactory;
-import org.verapdf.pdfa.VeraGreenfieldFoundryProvider;
+import org.verapdf.pdfa.PdfBoxFoundryProvider;
 import org.verapdf.pdfa.flavours.PDFAFlavour;
 import org.verapdf.pdfa.validation.profiles.ProfileDirectory;
 import org.verapdf.pdfa.validation.profiles.Profiles;
@@ -59,7 +59,7 @@ public class ProcessorImplProfileTest {
     public final void testCreateProcessorFromArgsNewProfile()
             throws FileNotFoundException, IOException,
             JAXBException {
-    	VeraGreenfieldFoundryProvider.initialise();
+    	PdfBoxFoundryProvider.initialise();
         ProfileDirectory directory = Profiles.getVeraProfileDirectory();
         assertTrue(directory.getValidationProfiles().size() > 0);
         for (ValidationProfile profile : directory.getValidationProfiles()) {

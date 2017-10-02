@@ -26,20 +26,27 @@
   <parent>
     <groupId>org.verapdf</groupId>
     <artifactId>verapdf-apps</artifactId>
-    <version>1.1.0-SNAPSHOT</version>
+    <version>1.9.0-SNAPSHOT</version>
   </parent>
+
+  <groupId>org.verapdf.apps</groupId>
   <artifactId>installer</artifactId>
   <name>veraPDF Installer</name>
   <description>Builds the veraPDF software installer.</description>
 
 
   <properties>
+    <installer.zip.prefix>verapdf-greenfield</installer.zip.prefix>
     <installer.output.filename>verapdf-izpack-installer-${project.version}.jar</installer.output.filename>
     <izpack.version>5.0.0</izpack.version>
     <izpack.staging>${project.build.directory}/staging</izpack.staging>
     <izpack.target>${project.build.directory}</izpack.target>
     <izpack.scripts>${project.build.scriptSourceDirectory}</izpack.scripts>
     <project.main.dir>${project.basedir}/..</project.main.dir>
+    <verapdf.apps.package>greenfield-apps</verapdf.apps.package>
+    <verapdf.apps.package.name>Greenfield</verapdf.apps.package.name>
+    <verapdf.wrapper.gui>org.verapdf.apps.GreenfieldGuiWrapper</verapdf.wrapper.gui>
+    <verapdf.wrapper.cli>org.verapdf.apps.GreenfieldCliWrapper</verapdf.wrapper.cli>
   </properties>
 
   <build>
@@ -49,12 +56,13 @@
         <artifactId>maven-resources-plugin</artifactId>
         <executions>
           <execution>
+            <!--  Copy izpack resources -->
             <id>izpack-staging</id>
-            <!-- here the phase you need -->
             <phase>validate</phase>
             <goals>
               <goal>copy-resources</goal>
             </goals>
+
             <configuration>
               <outputDirectory>${izpack.staging}</outputDirectory>
 
@@ -62,6 +70,8 @@
                 the stuff to install as well as install.xml and panel data and such -->
               <resources>
                 <resource>
+                  <!--  Filter izpack/install.xml to replace Maven variables
+                        like version and build date. -->
                   <directory>src/main/izpack</directory>
                   <filtering>true</filtering>
                   <includes>
@@ -69,6 +79,7 @@
                   </includes>
                 </resource>
                 <resource>
+                  <!--  Copy the rest without filtering. -->
                   <directory>src/main/izpack</directory>
                   <filtering>false</filtering>
                   <excludes>
@@ -79,8 +90,31 @@
             </configuration>
           </execution>
           <execution>
+            <!--  Copy izpack resources -->
+            <id>verapdf-scripts</id>
+            <phase>validate</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+
+            <configuration>
+              <outputDirectory>${izpack.staging}/scripts</outputDirectory>
+              <delimeters>
+                <delimeter>@</delimeter>
+              </delimeters>
+              <resources>
+                <resource>
+                  <!--  Filter izpack/install.xml to replace Maven variables
+                        like version and build date. -->
+                  <directory>src/main/scripts</directory>
+                  <filtering>true</filtering>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+          <execution>
+            <!-- Copy the non izpack resources -->
             <id>verapdf-resources</id>
-            <!-- here the phase you need -->
             <phase>validate</phase>
             <goals>
               <goal>copy-resources</goal>
@@ -96,14 +130,15 @@
                   <filtering>false</filtering>
                   <excludes>
                     <exclude>izpack</exclude>
+                    <exclude>scripts</exclude>
                   </excludes>
                 </resource>
               </resources>
             </configuration>
           </execution>
           <execution>
+            <!-- Copy REAME, RELEASENOTES and manual from project root dir. -->
             <id>verapdf-documents</id>
-            <!-- here the phase you need -->
             <phase>validate</phase>
             <goals>
               <goal>copy-resources</goal>
@@ -154,6 +189,7 @@
         <version>1.2.1</version>
         <executions>
           <execution>
+            <!-- Download the veraPDF corpus from GitHub to offer as an install option -->
             <id>corpus-master</id>
             <phase>package</phase>
             <goals>
@@ -167,6 +203,7 @@
             </configuration>
           </execution>
           <execution>
+            <!-- Download the veraPDF validation profiles from GitHub -->
             <id>profiles-integration</id>
             <phase>package</phase>
             <goals>
@@ -199,7 +236,7 @@
               <goal>wget</goal>
             </goals>
             <configuration>
-              <url>http://downloads.verapdf.org/dev/veraPDF-sample-plugin-pack.zip</url>
+              <url>http://software.verapdf.org/dev/veraPDF-sample-plugin-pack.zip</url>
               <unpack>false</unpack>
               <skipCache>true</skipCache>
               <outputDirectory>${project.build.directory}/staging/plugins</outputDirectory>
@@ -248,7 +285,7 @@
         <artifactId>maven-assembly-plugin</artifactId>
         <configuration>
           <descriptor>src/assembly/app-assembly.xml</descriptor>
-          <finalName>verapdf-${project.version}</finalName>
+          <finalName>${installer.zip.prefix}-${project.version}</finalName>
         </configuration>
         <executions>
           <execution>
@@ -271,12 +308,46 @@
     </plugins>
   </build>
 
-  <dependencies>
-    <dependency>
-      <groupId>org.verapdf</groupId>
-      <artifactId>gui</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-  </dependencies>
+  <profiles>
+    <profile>
+      <id>greenfield-apps</id>
+      <activation>
+        <property>
+          <name>!pdfbox.apps</name>
+        </property>
+      </activation>
+      <dependencies>
+        <dependency>
+          <groupId>org.verapdf.apps</groupId>
+          <artifactId>greenfield-apps</artifactId>
+          <version>${project.version}</version>
+        </dependency>
+      </dependencies>
+    </profile>
+
+    <profile>
+      <id>pdfbox-apps</id>
+      <activation>
+        <property>
+          <name>pdfbox.apps</name>
+        </property>
+      </activation>
+      <properties>
+        <installer.zip.prefix>verapdf-pdfbox</installer.zip.prefix>
+        <installer.output.filename>verapdf-izpack-pdfbox-installer-${project.version}.jar</installer.output.filename>
+        <verapdf.apps.package>pdfbox-apps</verapdf.apps.package>
+        <verapdf.wrapper.gui>org.verapdf.apps.PdfBoxGuiWrapper</verapdf.wrapper.gui>
+        <verapdf.wrapper.cli>org.verapdf.apps.PdfBoxCliWrapper</verapdf.wrapper.cli>
+        <verapdf.apps.package.name>PDFBox</verapdf.apps.package.name>
+      </properties>
+      <dependencies>
+        <dependency>
+          <groupId>org.verapdf.apps</groupId>
+          <artifactId>pdfbox-apps</artifactId>
+          <version>${project.version}</version>
+        </dependency>
+      </dependencies>
+    </profile>
+  </profiles>
 
 </project>

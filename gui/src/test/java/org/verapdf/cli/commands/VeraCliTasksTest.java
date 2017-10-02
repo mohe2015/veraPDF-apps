@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.verapdf.apps.Applications;
+import org.verapdf.apps.VeraAppConfig;
 import org.verapdf.core.VeraPDFException;
 import org.verapdf.features.FeatureFactory;
 import org.verapdf.processor.ProcessorConfig;
@@ -37,15 +38,7 @@ import org.verapdf.processor.plugins.PluginsCollectionConfig;
 public class VeraCliTasksTest {
 
 	/**
-	 * @throws java.lang.Exception
-	 */
-	@BeforeClass
-	public static void setUpBeforeClass() throws Exception {
-	}
-
-	/**
-	 * Test method for
-	 * {@link org.verapdf.cli.commands.VeraCliArgParser#fixMetadata()}.
+	 * Test method for {@link org.verapdf.cli.commands.VeraCliArgParser#fixMetadata()}.
 	 */
 	@Test
 	public void testFixMetadata() throws VeraPDFException {
@@ -108,11 +101,10 @@ public class VeraCliTasksTest {
 	}
 
 	private static ProcessorConfig getConfig(final String[] args) throws VeraPDFException {
-		VeraConfigGenerator configGen = new VeraConfigGeneratorImpl();
 		VeraCliArgParser parser = new VeraCliArgParser(args);
+		VeraAppConfig appConfig = parser.appConfig(Applications.defaultConfig());
 
-		return configGen.processorConfigFromArgs(parser,
-				configGen.appConfigFromArgs(parser, Applications.defaultConfig()).getProcessType(),
-				FeatureFactory.defaultConfig());
+		return parser.processorConfig(appConfig.getProcessType(),
+				FeatureFactory.defaultConfig(), PluginsCollectionConfig.defaultConfig());
 	}
 }

@@ -235,21 +235,20 @@ public class VeraCliArgParserTest {
 
 	@Test
 	public final void testProcessTypeParsing() {
-		VeraConfigGenerator configGen = new VeraConfigGeneratorImpl();
 		VeraCliArgParser parser = new VeraCliArgParser(new String[] {});
-		VeraAppConfig config = configGen.appConfigFromArgs(parser, Applications.defaultConfig());
+		VeraAppConfig config = parser.appConfig(Applications.defaultConfig());
 		assertFalse(parser.isValidationOff());
 		assertTrue(config.getProcessType().getTasks().contains(TaskType.VALIDATE));
 
 		// Test flag works
 		parser = new VeraCliArgParser(new String[] { "-o" });
-		config = configGen.appConfigFromArgs(parser, Applications.defaultConfig());
+		config  = parser.appConfig(Applications.defaultConfig());
 		assertTrue(parser.isValidationOff());
 		assertFalse(config.getProcessType().getTasks().contains(TaskType.VALIDATE));
 
 		// Test flag works
 		parser = new VeraCliArgParser(new String[] { "--off" });
-		config = configGen.appConfigFromArgs(parser, Applications.defaultConfig());
+		config = parser.appConfig(Applications.defaultConfig());
 		assertTrue(parser.isValidationOff());
 		assertFalse(config.getProcessType().getTasks().contains(TaskType.VALIDATE));
 	}

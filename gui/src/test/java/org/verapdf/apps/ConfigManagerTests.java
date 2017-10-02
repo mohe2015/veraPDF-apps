@@ -50,6 +50,7 @@ import org.verapdf.processor.TaskType;
  * @version 0.1 Created 31 Oct 2016:22:13:33
  */
 
+@SuppressWarnings("static-method")
 public class ConfigManagerTests {
 
 	/**
@@ -80,17 +81,6 @@ public class ConfigManagerTests {
 	public void testGetFixerConfig() {
 		ConfigManager newManager = Applications.createTmpConfigManager();
 		assertTrue(newManager.getFixerConfig().equals(FixerFactory.defaultConfig()));
-	}
-
-	/**
-	 * Test method for
-	 * {@link org.verapdf.apps.ConfigManagerImpl#getProcessorConfig()}.
-	 */
-	@Test
-	public void testGetProcessorConfig() {
-		ConfigManager newManager = Applications.createTmpConfigManager();
-		assertTrue(newManager.createProcessorConfig(EnumSet.noneOf(TaskType.class))
-				.equals(ProcessorFactory.defaultConfig()));
 	}
 
 	/**
